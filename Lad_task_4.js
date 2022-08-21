@@ -1,5 +1,12 @@
 var readlineSync = require("readline-sync");
 
+const GAMEOVER_MESSAGES = {
+  forcibly: "The Wizard decided not to continue fighting... The monster won!",
+  wizard: "Wizarg wins",
+  monster: "Monster wins",
+  draw: "All dead",
+};
+
 const monster = {
   maxHealth: 10,
   currentHealth: 10,
@@ -93,7 +100,7 @@ const battle = {
       return console.log(this.isOver(true));
     }
     this.damageCalculation(strikeMonster, strikeWizard);
-    if (this.isOver()) return console.log(this.isOver());
+    if (this.isOver()) return;
     this.updateCooldowns();
     return this.fight();
   },
@@ -170,19 +177,24 @@ const battle = {
     };
     console.log(statisctics);
   },
-  isOver(alert) {
-    if (alert) {
-      return "\n The Wizard decided not to continue fighting... The monster won!";
+  isOver(forcibly) {
+    if (forcibly) {
+      return this.gameOver("forcibly");
     }
     if (monster.currentHealth <= 0 && wizard.currentHealth > 0) {
-      return "\n Wizarg wins";
+      return this.gameOver("wizard");
     } else if (wizard.currentHealth <= 0 && monster.currentHealth > 0) {
-      return "\n Monster wins";
+      return this.gameOver("monster");
     } else if (wizard.currentHealth <= 0 && monster.currentHealth <= 0) {
-      return "\n All dead";
+      return this.gameOver("draw");
     } else {
       return false;
     }
+  },
+  gameOver(winner) {
+    console.log("GAME OVER");
+    console.log("\n" + GAMEOVER_MESSAGES[winner]);
+    return true;
   },
   haveCooldownMonster(n) {
     return !!this.cooldownList.monster.find((item) => item.index === n);
