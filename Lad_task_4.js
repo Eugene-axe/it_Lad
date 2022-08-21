@@ -2,7 +2,7 @@ var readlineSync = require("readline-sync");
 
 const GAMEOVER_MESSAGES = {
   forcibly: "The Wizard decided not to continue fighting... The monster won!",
-  wizard: "Wizarg wins",
+  wizard: "Wizard wins",
   monster: "Monster wins",
   draw: "All dead",
 };
@@ -80,10 +80,7 @@ const wizard = {
 };
 
 const battle = {
-  cooldownList: {
-    monster: [],
-    wizard: [],
-  },
+  cooldownList: {},
   difficult: {
     ease: 14,
     normal: 10,
@@ -112,12 +109,14 @@ const battle = {
     wizard.maxHealth = this.difficult[difficultTitle[n]];
     monster.currentHealth = monster.maxHealth;
     wizard.currentHealth = wizard.maxHealth;
+    this.cooldownList[monster.name] = [];
+    this.cooldownList[wizard.name] = [];
   },
   сhoiceStrikeMonster() {
     const strikeIndex = () => {
       const n = randomInteger(0, monster.moves.length - 1);
-      if (this.haveCooldownMonster(n)) return strikeIndex();
-      this.cooldownList.monster.push({
+      if (this.haveCooldown(monster.name, n)) return strikeIndex();
+      this.cooldownList[monster.name].push({
         index: n,
         cooldown: monster.moves[n].cooldown,
       });
@@ -129,7 +128,7 @@ const battle = {
   },
   сhoiceStrikeWizard() {
     const wizardMoveNames = wizard.moves
-      .filter((move, i) => !this.haveCooldownWizard(i))
+      .filter((move, i) => !this.haveCooldown(wizard.name, i))
       .map((move, i) => {
         console.log(`[${i + 1}] - ${move.name} `);
         return move.name;
@@ -146,7 +145,7 @@ const battle = {
       "Wizard chooses to answer : ",
       wizard.moves[wizardStrikeIndex].name
     );
-    this.cooldownList.wizard.push({
+    this.cooldownList[wizard.name].push({
       index: wizardStrikeIndex,
       cooldown: wizard.moves[wizardStrikeIndex].cooldown,
     });
@@ -193,24 +192,19 @@ const battle = {
   },
   gameOver(winner) {
     console.log("GAME OVER");
-    console.log("\n" + GAMEOVER_MESSAGES[winner]);
+    console.log("\n" + GAMEOVER_MESSAGES[winner] + "\n");
     return true;
   },
-  haveCooldownMonster(n) {
-    return !!this.cooldownList.monster.find((item) => item.index === n);
-  },
-  haveCooldownWizard(n) {
-    return !!this.cooldownList.wizard.find((item) => item.index === n);
+  haveCooldown(pers, n) {
+    return !!this.cooldownList[pers].find((item) => item.index === n);
   },
   updateCooldowns() {
-    this.cooldownList.monster = this.cooldownList.monster.filter((cd) => {
-      cd.cooldown = cd.cooldown - 1;
-      return cd.cooldown > 0;
-    });
-    this.cooldownList.wizard = this.cooldownList.wizard.filter((cd) => {
-      cd.cooldown = cd.cooldown - 1;
-      return cd.cooldown > 0;
-    });
+    for (let pers in this.cooldownList) {
+      this.cooldownList[pers] = this.cooldownList[pers].filter((cd) => {
+        cd.cooldown = cd.cooldown - 1;
+        return cd.cooldown > 0;
+      });
+    }
   },
 };
 
